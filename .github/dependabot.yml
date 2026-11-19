@@ -14,12 +14,12 @@ updates:
       # balloons the dist with unused ts/css/html workers (#2101).
       - dependency-name: monaco-editor
 
-  - package-ecosystem: docker
-    directory: /
+  - package-ecosystem: gomod
+    directory: /server
     schedule:
-      interval: daily
+      interval: weekly
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: daily
+      interval: weekly
