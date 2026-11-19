@@ -104,12 +104,11 @@ func main() {
 	go wd.Loop(ctx)
 
 	up := &update.Updater{
-		Repo: cfg.Update.Repo, Current: version, UIDir: cfg.UIDir,
+		Repo: cfg.Update.Repo, Current: version, UIDir: cfg.UIDir, Mirror: cfg.Update.Mirror,
 		WorkDir: filepath.Join(cfg.DataDir, "update"),
 		Client: func() *http.Client {
 			if cfg.Update.Proxy {
-				c := core.ProxyHTTP(5*time.Minute, false)
-				return c
+				return core.ProxyHTTP(5*time.Minute, false)
 			}
 			return &http.Client{Timeout: 5 * time.Minute}
 		},

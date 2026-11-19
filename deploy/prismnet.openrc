@@ -1,0 +1,18 @@
+#!/sbin/openrc-run
+# PrismNet 面板后端（OpenRC，Alpine）
+
+name="prismnet"
+description="PrismNet panel for mihomo"
+command="/opt/prismnet/prismnet"
+command_args="-c /etc/prismnet/config.json"
+output_log="/var/log/prismnet.log"
+error_log="/var/log/prismnet.log"
+# 在线更新后程序会原地 exec 新版本（PID 不变）；进程意外退出时由 supervise-daemon 拉起
+supervisor=supervise-daemon
+respawn_delay=3
+respawn_max=0
+
+depend() {
+	need net
+	after mihomo
+}

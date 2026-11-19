@@ -1,0 +1,60 @@
+name: release
+
+# 推送 v* 标签时构建面板与 linux arm64 / amd64 后端，发布到 GitHub Releases。
+# 面板「在线更新」读取最新 Release 的 prismnet-linux-<arch>.tar.gz 与 sha256sums.txt。
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to (re)build, e.g. v0.1.0'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v6.1.1
+      - uses: actions/setup-node@v7
+        with:
+          cache: pnpm
+          node-version-file: .node-version
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: server/go.mod
+          cache-dependency-path: server/go.sum
+      - run: pnpm install --frozen-lockfile
+      - name: Test backend
+        working-directory: server
+        run: go vet ./... && go test ./...
+      - name: Build release assets
+        run: VERSION="$TAG" sh scripts/build-release.sh
+      - name: Release notes
+        run: |
+          prev=$(git describe --tags --abbrev=0 "$TAG^" 2>/dev/null || true)
+          {
+            echo "## PrismNet $TAG"
+            echo
+            echo '安装 / 升级：`curl -fsSL https://raw.githubusercontent.com/Skycnhe/prismnet/main/install.sh | sh`，或在面板「PrismNet → 在线更新」一键更新。'
+            echo
+            if [ -n "$prev" ]; then echo "### 变更（$prev → $TAG）"; git log --pretty='- %s' "$prev..$TAG"; fi
+          } > notes.md
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/*.tar.gz dist/sha256sums.txt --clobber
+          else
+            gh release create "$TAG" dist/*.tar.gz dist/sha256sums.txt --title "PrismNet $TAG" --notes-file notes.md
+          fi

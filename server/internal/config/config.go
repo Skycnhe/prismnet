@@ -38,8 +38,9 @@ type Watchdog struct {
 
 // Update 在线更新。
 type Update struct {
-	Repo  string `json:"repo"`  // GitHub 仓库 owner/name
-	Proxy bool   `json:"proxy"` // 经核心 mixed 端口下载
+	Repo   string `json:"repo"`   // GitHub 仓库 owner/name
+	Proxy  bool   `json:"proxy"`  // 经核心 mixed 端口访问 GitHub
+	Mirror string `json:"mirror"` // 下载加速前缀，例如 https://ghfast.top/（只用于下载发布包）
 }
 
 // Config 后端配置。

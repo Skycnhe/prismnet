@@ -61,6 +61,7 @@ type Updater struct {
 	Exe      string // 后端程序路径（空则取 os.Executable）
 	Client   func() *http.Client
 	APIBase  string // 测试用，默认 https://api.github.com
+	Mirror   string // 下载加速前缀（拼在 browser_download_url 前）
 	Progress func(stage string)
 
 	mu      sync.Mutex
@@ -247,6 +248,9 @@ func (u *Updater) step(s string) {
 }
 
 func (u *Updater) download(ctx context.Context, url string, limit int64) ([]byte, error) {
+	if u.Mirror != "" {
+		url = strings.TrimRight(u.Mirror, "/") + "/" + url
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err

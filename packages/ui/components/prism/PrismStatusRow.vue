@@ -62,7 +62,7 @@ const devices = computed(() => new Set(connectionsStore.activeConnections.map((c
       <div class="prism-muted mb-2 text-sm">
         代理方式
       </div>
-      <div class="flex items-baseline justify-between gap-2">
+      <div class="flex flex-wrap items-baseline justify-between gap-x-2">
         <span class="prism-num text-2xl sm:text-3xl">{{ method.main }}</span>
         <span class="prism-muted truncate text-xs sm:text-sm" :title="coreName">{{ method.sub }}</span>
       </div>
@@ -74,7 +74,7 @@ const devices = computed(() => new Set(connectionsStore.activeConnections.map((c
       <div class="prism-muted mb-2 text-sm">
         活动连接
       </div>
-      <div class="flex items-baseline justify-between gap-2">
+      <div class="flex flex-wrap items-baseline justify-between gap-x-2">
         <NuxtLink to="/connections" class="prism-num text-2xl sm:text-3xl">
           {{ prismNum(conns) }}
         </NuxtLink>
@@ -85,7 +85,7 @@ const devices = computed(() => new Set(connectionsStore.activeConnections.map((c
       <div class="prism-muted mb-2 text-sm">
         今日拦截广告
       </div>
-      <div class="flex items-baseline justify-between gap-2">
+      <div class="flex flex-wrap items-baseline justify-between gap-x-2">
         <span class="prism-num text-2xl sm:text-3xl">{{ stats ? prismNum(stats.stats.today) : '—' }}</span>
         <span class="prism-muted truncate text-xs sm:text-sm">规则 {{ stats ? prismNum(stats.adblock.rules) : '—' }} 条</span>
       </div>

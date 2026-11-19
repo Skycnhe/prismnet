@@ -1,0 +1,60 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md', 'docs/**', 'preview/**']
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6.1.1
+      - uses: actions/setup-node@v7
+        with:
+          cache: pnpm
+          node-version-file: .node-version
+      - run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm --filter @metacubexd/ui exec eslint .
+      - name: Typecheck
+        run: pnpm --filter @metacubexd/ui typecheck
+      - name: Unit tests
+        run: |
+          pnpm --filter @metacubexd/config-editor exec vitest run
+          pnpm --filter @metacubexd/ui exec vitest run --exclude 'e2e/**'
+      - name: Build
+        run: pnpm --filter @metacubexd/ui generate
+
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: server/go.mod
+          cache-dependency-path: server/go.sum
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+      - run: go vet ./...
+      - run: go test -race ./...
+      - name: Cross build
+        run: |
+          CGO_ENABLED=0 GOARCH=arm64 go build -o /dev/null ./cmd/prismnet
+          CGO_ENABLED=0 GOARCH=amd64 go build -o /dev/null ./cmd/prismnet
+      - name: Shell syntax
+        working-directory: .
+        run: sh -n install.sh && sh -n uninstall.sh && sh -n scripts/build-release.sh
