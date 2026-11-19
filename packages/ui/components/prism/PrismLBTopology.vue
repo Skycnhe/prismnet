@@ -58,13 +58,13 @@ defineExpose({ healthy, inUse, total, members })
 <template>
   <div v-if="g" class="flex items-stretch gap-0">
     <div class="flex shrink-0 items-center">
-      <div class="flex size-28 flex-col items-center justify-center rounded-full border-2 border-info/70 bg-info/10 text-center text-xs sm:size-32">
-        <b class="max-w-[6.5rem] truncate text-sm">{{ prismStripEmoji(g.name) }}</b>
+      <div class="flex size-24 flex-col items-center justify-center rounded-full border-2 border-info/70 bg-info/10 text-center text-[11px] sm:size-32 sm:text-xs">
+        <b class="max-w-[5.5rem] truncate text-xs sm:max-w-[6.5rem] sm:text-sm">{{ prismStripEmoji(g.name) }}</b>
         <span class="text-success">↓ {{ prismSpeed(total.down) }}</span>
         <span class="text-warning">↑ {{ prismSpeed(total.up) }}</span>
       </div>
     </div>
-    <svg class="w-10 shrink-0 sm:w-12" :viewBox="`0 0 50 ${svgH}`" preserveAspectRatio="none" :style="{ height: `${svgH}px` }">
+    <svg class="w-6 shrink-0 sm:w-12" :viewBox="`0 0 50 ${svgH}`" preserveAspectRatio="none" :style="{ height: `${svgH}px` }">
       <path v-for="(_, i) in shown" :key="i" :d="path(i)" fill="none" stroke="var(--color-info)" stroke-opacity="0.7" stroke-width="2" vector-effect="non-scaling-stroke" />
     </svg>
     <div class="flex min-w-0 flex-1 flex-col">
