@@ -1,0 +1,65 @@
+name: e2e
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6.1.1
+
+      - uses: actions/setup-node@v7
+        with:
+          cache: pnpm
+          node-version: latest
+
+      - name: install dependencies
+        run: pnpm install
+
+      - name: install playwright browsers
+        run: pnpm --filter @metacubexd/ui exec playwright install --with-deps chromium
+
+      - name: build with mock mode
+        run: pnpm --filter @metacubexd/ui build:mock
+
+      - name: run e2e tests
+        run: pnpm --filter @metacubexd/ui test:e2e
+
+      - name: verify screenshot generation
+        run: |
+          pnpm --filter @metacubexd/ui screenshot
+          for viewport in pc mobile; do
+            for page in overview proxies connections rules logs config; do
+              test -s "$OUTPUT_DIR/$viewport/$page.png"
+            done
+          done
+        env:
+          OUTPUT_DIR: ${{ runner.temp }}/metacubexd-screenshots
+
+      - name: generate static release artifact
+        run: NUXT_APP_BASE_URL='./' pnpm --filter @metacubexd/ui generate
+
+      - name: verify static release at root and subdirectory
+        run: pnpm --filter @metacubexd/ui test:static

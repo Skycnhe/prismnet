@@ -1,0 +1,374 @@
+import type {
+  Connection,
+  ConnectionRawMessage,
+  DataUsageType,
+  WsMsg,
+} from '~/types'
+import type { DataUsageLog } from '~/utils/db'
+import { defineStore } from 'pinia'
+
+import { CONNECTIONS_TABLE_MAX_CLOSED_ROWS } from '~/constants'
+import { db } from '~/utils/db'
+
+export const useConnectionsStore = defineStore('connections', () => {
+  const globalStore = useGlobalStore()
+  const configStore = useConfigStore()
+
+  // State
+  // shallowRef: these hold large arrays of connection objects replaced wholesale
+  // on every (per-second) WebSocket message. A deep `ref` would proxy every
+  // connection and every nested metadata field reactively on each update — a
+  // major per-second cost with hundreds/thousands of connections. We only ever
+  // reassign `.value`, so shallow reactivity is sufficient and far cheaper.
+  const allConnections = shallowRef<Connection[]>([])
+  const activeConnections = shallowRef<Connection[]>([])
+  const closedConnections = shallowRef<Connection[]>([])
+  const latestConnectionMsg = shallowRef<WsMsg>(null)
+  const paused = ref(false)
+
+  // Data usage tracking (IndexedDB buffer)
+  const dataRetention = useLocalStorage('traffic_data_retention', -1)
+  const logBuffer = new Map<string, DataUsageLog>()
+  let flushTimeout: ReturnType<typeof setTimeout> | null = null
+
+  // Cheap composite key: JSON.stringify ran once per active connection per
+  // second and showed up in profiles. A delimiter join over the same fields is
+  // an order of magnitude cheaper; \x1f (unit separator) can't appear in hosts,
+  // IPs or process names so collisions aren't a concern.
+  const getDataUsageBufferKey = (log: DataUsageLog) =>
+    `${log.timestamp}\x1F${log.sourceIP}\x1F${log.host}\x1F${log.outbound}\x1F${log.process}\x1F${log.inboundUser}`
+
+  const flushLogs = async () => {
+    if (logBuffer.size === 0) return
+    const logsToFlush = Array.from(logBuffer.values())
+    logBuffer.clear()
+    try {
+      await db.addLogs(logsToFlush)
+      if (dataRetention.value > 0) {
+        await db.cleanup(Date.now() - dataRetention.value)
+      }
+    } catch (e) {
+      console.error('[Data Usage] Failed to flush logs to IndexedDB', e)
+    }
+  }
+
+  const scheduleFlush = () => {
+    if (flushTimeout) return
+    const delay = 30000 - (Date.now() % 30000) || 30000
+    flushTimeout = setTimeout(async () => {
+      await flushLogs()
+      flushTimeout = null
+      if (logBuffer.size > 0) scheduleFlush()
+    }, delay)
+  }
+
+  const baselineTotals = useLocalStorage<{ upload: number; download: number }>(
+    'dataUsageBaseline',
+    { upload: 0, download: 0 },
+  )
+
+  // Track last known totals to detect service restart
+  let lastUploadTotal = 0
+  let lastDownloadTotal = 0
+
+  // Track last known data for each connection
+  const connectionLastData = new Map<
+    string,
+    { upload: number; download: number }
+  >()
+  let hasInitializedSession = false
+
+  const resetDataUsageBaseline = () => {
+    connectionLastData.clear()
+    hasInitializedSession = false
+  }
+
+  // Helper functions
+  const restructRawMsgToConnection = (
+    connections: ConnectionRawMessage[],
+    prevActiveConnections: Connection[],
+  ): Connection[] => {
+    const prevMap = new Map<string, Connection>()
+    prevActiveConnections.forEach((prev) => prevMap.set(prev.id, prev))
+
+    return connections.map((connection) => {
+      const prevConn = prevMap.get(connection.id)
+
+      if (
+        !prevConn ||
+        typeof prevConn.download !== 'number' ||
+        typeof prevConn.upload !== 'number'
+      ) {
+        return {
+          ...connection,
+          downloadSpeed: 0,
+          uploadSpeed: 0,
+        }
+      }
+
+      return {
+        ...connection,
+        downloadSpeed: connection.download - prevConn.download,
+        uploadSpeed: connection.upload - prevConn.upload,
+      }
+    })
+  }
+
+  const mergeAllConnections = (activeConns: Connection[]) => {
+    const seen = new Set<string>()
+    const merged: Connection[] = []
+
+    // Add new active connections first (fresh data)
+    for (const c of activeConns) {
+      if (!seen.has(c.id)) {
+        seen.add(c.id)
+        merged.push(c)
+      }
+    }
+
+    // Append previous connections not in the new active list
+    for (const c of allConnections.value) {
+      if (!seen.has(c.id)) {
+        seen.add(c.id)
+        merged.push(c)
+      }
+    }
+
+    // merged is newest first (active, then just closed, then older closed),
+    // so trim from the end to drop the oldest closed connections.
+    const limit = activeConns.length + CONNECTIONS_TABLE_MAX_CLOSED_ROWS
+    allConnections.value =
+      limit > 0 && merged.length > limit ? merged.slice(0, limit) : merged
+  }
+
+  const diffClosedConnections = (
+    activeIds: Set<string>,
+    allConns: Connection[],
+  ) => allConns.filter((c) => !activeIds.has(c.id))
+
+  // Reset connection tracking data
+  const resetConnectionTracking = () => {
+    resetDataUsageBaseline()
+    baselineTotals.value = { upload: 0, download: 0 }
+    console.log('[Data Usage] Connection tracking reset due to service restart')
+  }
+
+  // Clear all data usage
+  const clearDataUsage = async () => {
+    // Clear in-memory tracking synchronously BEFORE awaiting IndexedDB. On the
+    // service-restart path in updateFromWsMsg this is called without `await`,
+    // so deferring the baseline reset until after the await would wipe the
+    // fresh baseline that updateDataUsage rebuilds in the same tick —
+    // making the next message count each connection's cumulative total as a
+    // single delta.
+    logBuffer.clear()
+    resetDataUsageBaseline()
+    await db.clearAll()
+  }
+
+  // Remove specific entry (Note: In IndexedDB model, "removing" an entry might mean deleting all logs for that label in a timeframe, but usually we just clear all or let it expire)
+  const removeDataUsageEntry = async (_type: DataUsageType, _id: string) => {
+    // This is harder with the log-based model. We might want to just skip this or implement a more complex deletion
+    // For now, let's keep it as a placeholder or ignore since we are moving to a historical model
+    console.warn(
+      '[Data Usage] removeDataUsageEntry is not supported in the new log-based model',
+    )
+  }
+
+  // Cleanup inactive connections — drop per-connection tracking state for ids
+  // that are no longer active. Receives a prebuilt id set from the caller.
+  const cleanupInactiveConnections = (activeIds: Set<string>) => {
+    connectionLastData.forEach((_, connId) => {
+      if (!activeIds.has(connId)) {
+        connectionLastData.delete(connId)
+      }
+    })
+  }
+
+  // Update connections from WebSocket message
+  const updateFromWsMsg = (msg: WsMsg) => {
+    latestConnectionMsg.value = msg
+    const rawConns = msg?.connections
+
+    // Detect service restart
+    const currentUploadTotal = msg?.uploadTotal || 0
+    const currentDownloadTotal = msg?.downloadTotal || 0
+
+    if (
+      currentUploadTotal < lastUploadTotal ||
+      currentDownloadTotal < lastDownloadTotal
+    ) {
+      resetConnectionTracking()
+      clearDataUsage()
+      globalStore.clearChartHistory()
+    }
+
+    lastUploadTotal = currentUploadTotal
+    lastDownloadTotal = currentDownloadTotal
+
+    if (!rawConns) return
+
+    // An empty snapshot still starts the tracking session, so connections
+    // appearing in a later snapshot include their initial bytes.
+    if (configStore.enableDataUsageTracking) {
+      updateDataUsage(rawConns)
+    }
+
+    const activeIds = new Set(rawConns.map((c) => c.id))
+    cleanupInactiveConnections(activeIds)
+
+    if (rawConns.length === 0) return
+
+    const activeConns = restructRawMsgToConnection(
+      rawConns,
+      activeConnections.value,
+    )
+
+    // Merge all connections
+    mergeAllConnections(activeConns)
+
+    if (!paused.value) {
+      const closedConns = diffClosedConnections(activeIds, allConnections.value)
+      activeConnections.value = activeConns
+      closedConnections.value = closedConns.slice(
+        0,
+        CONNECTIONS_TABLE_MAX_CLOSED_ROWS,
+      )
+    }
+  }
+
+  // Update data usage
+  const updateDataUsage = (connections: ConnectionRawMessage[]) => {
+    if (!hasInitializedSession) {
+      hasInitializedSession = true
+      // These counters may include traffic from before the dashboard opened.
+      // Establish a baseline instead of attributing their totals to now.
+      connections.forEach((conn) => {
+        connectionLastData.set(conn.id, {
+          upload: conn.upload || 0,
+          download: conn.download || 0,
+        })
+      })
+      return
+    }
+
+    const now = Date.now()
+    const minuteStart = Math.floor(now / 60000) * 60000
+    let hasDeltas = false
+
+    connections.forEach((conn) => {
+      const currentUpload = conn.upload || 0
+      const currentDownload = conn.download || 0
+      let uploadDelta = 0
+      let downloadDelta = 0
+
+      const lastData = connectionLastData.get(conn.id)
+
+      if (lastData) {
+        uploadDelta = Math.max(0, currentUpload - lastData.upload)
+        downloadDelta = Math.max(0, currentDownload - lastData.download)
+      } else {
+        uploadDelta = currentUpload
+        downloadDelta = currentDownload
+      }
+
+      connectionLastData.set(conn.id, {
+        upload: currentUpload,
+        download: currentDownload,
+      })
+
+      if (uploadDelta === 0 && downloadDelta === 0) return
+
+      hasDeltas = true
+      const log: DataUsageLog = {
+        timestamp: minuteStart,
+        sourceIP: conn.metadata.sourceIP || 'Inner',
+        host: conn.metadata.host || conn.metadata.destinationIP,
+        process: conn.metadata.process || 'Unknown',
+        outbound: conn.chains[0] ?? 'DIRECT',
+        inboundUser:
+          conn.metadata.inboundUser ||
+          conn.metadata.inboundIP ||
+          conn.metadata.inboundName ||
+          conn.metadata.type ||
+          'Unknown',
+        upload: uploadDelta,
+        download: downloadDelta,
+      }
+      const key = getDataUsageBufferKey(log)
+      const existing = logBuffer.get(key)
+      if (existing) {
+        existing.upload += uploadDelta
+        existing.download += downloadDelta
+      } else {
+        logBuffer.set(key, log)
+      }
+    })
+
+    if (hasDeltas) {
+      scheduleFlush()
+    }
+  }
+
+  // Computed: speed grouped by proxy name
+  const speedGroupByName = computed(() => {
+    const returnMap: Record<string, number> = {}
+
+    activeConnections.value.forEach((c) => {
+      c.chains.forEach((chain) => {
+        if (!returnMap[chain]) {
+          returnMap[chain] = 0
+        }
+        returnMap[chain] += c.downloadSpeed
+      })
+    })
+
+    return returnMap
+  })
+
+  // Switching endpoints uses SPA navigation (no page reload), so this store
+  // singleton keeps lastUpload/DownloadTotal from the previous backend. A new
+  // backend whose cumulative totals are lower would otherwise look like a
+  // kernel restart and trigger clearDataUsage() + clearChartHistory(),
+  // destroying the user's accumulated usage history. On endpoint change reset
+  // the restart-detection and per-connection baselines. The new backend's
+  // first message establishes a baseline without wiping persisted usage. Clear
+  // visible connections too, so they cannot appear to belong to the new host.
+  const endpointStore = useEndpointStore()
+  watch(
+    () => [
+      endpointStore.selectedEndpoint,
+      endpointStore.currentEndpoint?.url,
+      endpointStore.currentEndpoint?.secret,
+    ],
+    () => {
+      lastUploadTotal = 0
+      lastDownloadTotal = 0
+      resetDataUsageBaseline()
+      latestConnectionMsg.value = null
+      allConnections.value = []
+      activeConnections.value = []
+      closedConnections.value = []
+    },
+    { flush: 'sync' },
+  )
+
+  // Reset synchronously even if tracking is toggled off and on between
+  // snapshots, so traffic transferred while disabled is never backfilled.
+  watch(() => configStore.enableDataUsageTracking, resetDataUsageBaseline, {
+    flush: 'sync',
+  })
+
+  return {
+    allConnections,
+    activeConnections,
+    closedConnections,
+    latestConnectionMsg,
+    paused,
+    speedGroupByName,
+    updateFromWsMsg,
+    clearDataUsage,
+    removeDataUsageEntry,
+    restructRawMsgToConnection,
+  }
+})
