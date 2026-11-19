@@ -5,7 +5,7 @@
 #   sh install.sh ./prismnet-linux-arm64.tar.gz      # 使用本地发布包（离线安装）
 #
 # 环境变量：
-#   PRISMNET_MIRROR   下载加速前缀，例如 https://ghfast.top/
+#   PRISMNET_MIRROR   下载加速前缀，例如 https://gh-proxy.com/
 #   PRISMNET_VERSION  指定版本标签（默认最新版，例如 v0.1.0）
 #   PRISMNET_PORT     面板监听端口（默认 7880，仅首次安装生效）
 set -eu
@@ -50,7 +50,7 @@ else
 		BASE="https://github.com/${REPO}/releases/latest/download"
 	fi
 	say "下载 ${PKG} …"
-	fetch "${MIRROR}${BASE}/${PKG}" "$TMP/$PKG" || die "下载失败；国内网络可设置 PRISMNET_MIRROR=https://ghfast.top/ 后重试"
+	fetch "${MIRROR}${BASE}/${PKG}" "$TMP/$PKG" || die "下载失败；国内网络可设置 PRISMNET_MIRROR=https://gh-proxy.com/ 后重试"
 	fetch "${MIRROR}${BASE}/sha256sums.txt" "$TMP/sha256sums.txt" || die "下载校验文件失败"
 	(cd "$TMP" && grep " ${PKG}\$" sha256sums.txt | sha256sum -c -) >/dev/null || die "SHA-256 校验失败"
 	say "校验通过"

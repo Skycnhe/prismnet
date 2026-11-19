@@ -4,8 +4,8 @@
 把旁路由日常要看的东西都放进一个面板，并配一个小巧的 Go 后端（单个静态二进制，支持 linux arm64 / amd64），
 提供站点延迟、IP 信息、广告拦截、DNS 统计、看门狗与**在线更新**。
 
-| 桌面 | 手机 |
-| --- | --- |
+| 桌面                                               | 手机                                         |
+| -------------------------------------------------- | -------------------------------------------- |
 | ![概览（桌面）](preview/overview-desktop-full.png) | ![概览（手机）](preview/overview-mobile.png) |
 
 ## 功能
@@ -36,7 +36,7 @@
 ```sh
 curl -fsSL https://raw.githubusercontent.com/Skycnhe/prismnet/main/install.sh | sh
 # 国内网络可加速下载：
-curl -fsSL https://ghfast.top/https://raw.githubusercontent.com/Skycnhe/prismnet/main/install.sh | PRISMNET_MIRROR=https://ghfast.top/ sh
+curl -fsSL https://gh-proxy.com/https://raw.githubusercontent.com/Skycnhe/prismnet/main/install.sh | PRISMNET_MIRROR=https://gh-proxy.com/ sh
 ```
 
 脚本会：下载最新发布包并校验 SHA-256 → 安装到 `/opt/prismnet` → 首次安装时从 `/etc/mihomo/config.yaml`
@@ -53,25 +53,34 @@ curl -fsSL https://ghfast.top/https://raw.githubusercontent.com/Skycnhe/prismnet
 
 ```jsonc
 {
-  "listen": ":7880",               // 面板监听地址
-  "secret": "",                    // 面板访问密钥（留空不校验；设置后在连接页填写）
+  "listen": ":7880", // 面板监听地址
+  "secret": "", // 面板访问密钥（留空不校验；设置后在连接页填写）
   "data_dir": "/var/lib/prismnet",
   "ui_dir": "/opt/prismnet/ui",
   "mihomo": {
     "controller": "http://127.0.0.1:9090", // mihomo external-controller
-    "secret": "",                          // mihomo secret（由后端代为附加，浏览器无需知道）
-    "mixed_port": 7890,                    // 站点延迟 / 代理出口 IP 经此端口测量
+    "secret": "", // mihomo secret（由后端代为附加，浏览器无需知道）
+    "mixed_port": 7890, // 站点延迟 / 代理出口 IP 经此端口测量
     "config_path": "/etc/mihomo/config.yaml", // 广告拦截开关会修改它（自动备份为 .prismnet.bak）
-    "service": "mihomo"                    // 看门狗重启用的服务名
+    "service": "mihomo", // 看门狗重启用的服务名
   },
   "watchdog": {
-    "enabled": true, "interval": 30, "timeout": 8, "fail_threshold": 2,
-    "restart_cmd": "",   // 默认 rc-service <service> restart / systemctl restart <service>
-    "bypass_cmd": "",    // 切换直连；默认停止核心（TUN / 透明代理路由随之撤销）
-    "restore_cmd": ""    // 核心恢复后执行（如重新加载 nftables 透明代理规则）
+    "enabled": true,
+    "interval": 30,
+    "timeout": 8,
+    "fail_threshold": 2,
+    "restart_cmd": "", // 默认 rc-service <service> restart / systemctl restart <service>
+    "bypass_cmd": "", // 切换直连；默认停止核心（TUN / 透明代理路由随之撤销）
+    "restore_cmd": "", // 核心恢复后执行（如重新加载 nftables 透明代理规则）
   },
-  "sites": [ { "name": "Google", "url": "https://www.google.com/generate_204", "icon": "google" } ],
-  "update": { "repo": "Skycnhe/prismnet", "proxy": false, "mirror": "" }
+  "sites": [
+    {
+      "name": "Google",
+      "url": "https://www.google.com/generate_204",
+      "icon": "google",
+    },
+  ],
+  "update": { "repo": "Skycnhe/prismnet", "proxy": false, "mirror": "" },
 }
 ```
 
