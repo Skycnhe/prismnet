@@ -36,7 +36,7 @@ catalog:
   byte-size: ^9.0.2
   commitlint: ^21.2.4
   d3: ^7.9.2
-  daisyui: ^5.8.0
+  daisyui: ^5.8.1
   dayjs: ^1.11.23
   electron: ^45.3.2
   electron-builder: ^26.18.0
@@ -48,12 +48,12 @@ catalog:
   # for brand-new packages — they do NOT bump any existing dependency, so the
   # "ZERO version bumps" rule still holds (it forbids changing the version of
   # an already-present dep, not adding a new one). Versions come from spec §1.
-  h3: ^1.15.11
+  h3: ^2.0.8
   highcharts: ^13.1.1
   husky: ^9.1.7
   jsdom: ^31.0.1
   ky: ^2.2.0
-  lint-staged: ^17.6.0
+  lint-staged: ^17.6.1
   markdown-it: ^15.0.3
   match-sorter: ^8.3.1
   meta-json-schema: ^1.19.33
