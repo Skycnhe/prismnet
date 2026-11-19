@@ -229,6 +229,10 @@ func (s *Server) static() http.Handler {
 		}
 		dir := s.Cfg.UIDir
 		p := filepath.Clean("/" + r.URL.Path)
+		if strings.HasPrefix(p, "/api/") { // 未知 API（如 metacubexd 的 /api/control 探测）不回退到 index.html
+			http.NotFound(w, r)
+			return
+		}
 		full := filepath.Join(dir, p)
 		fi, err := os.Stat(full)
 		if err == nil && fi.IsDir() {
