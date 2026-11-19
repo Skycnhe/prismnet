@@ -71,6 +71,7 @@ mkdir -p "$PREFIX" "$CONF_DIR" /var/lib/prismnet
 rm -rf "$PREFIX/ui.new" && cp -r "$TMP/x/ui" "$PREFIX/ui.new"
 rm -rf "$PREFIX/ui" && mv "$PREFIX/ui.new" "$PREFIX/ui"
 install -m 0755 "$TMP/x/prismnet" "$PREFIX/prismnet"
+[ -f "$TMP/x/uninstall.sh" ] && install -m 0755 "$TMP/x/uninstall.sh" "$PREFIX/uninstall.sh"
 say "已安装 $("$PREFIX/prismnet" -version)"
 
 # 首次安装：写配置，尽量从 mihomo 配置读取外部控制器与密钥
