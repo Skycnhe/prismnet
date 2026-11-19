@@ -652,5 +652,10 @@
   "visualEditorDiagnostics": "Configuration diagnostics",
   "visualEditorManaged": "Managed",
   "quality": "Quality",
-  "sortDefault": "Default"
+  "sortDefault": "Default",
+  "prism": {
+    "settings": "PrismNet",
+    "topology": "Topology",
+    "statistics": "Statistics"
+  }
 }

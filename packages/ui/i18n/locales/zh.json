@@ -652,5 +652,10 @@
   "visualEditorDiagnostics": "配置诊断",
   "visualEditorManaged": "托管",
   "quality": "质量",
-  "sortDefault": "默认"
+  "sortDefault": "默认",
+  "prism": {
+    "settings": "PrismNet",
+    "topology": "拓扑",
+    "statistics": "统计"
+  }
 }

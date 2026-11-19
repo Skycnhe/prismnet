@@ -652,5 +652,10 @@
   "visualEditorDiagnostics": "설정 진단",
   "visualEditorManaged": "관리됨",
   "quality": "품질",
-  "sortDefault": "기본"
+  "sortDefault": "기본",
+  "prism": {
+    "settings": "PrismNet",
+    "topology": "Topology",
+    "statistics": "Statistics"
+  }
 }

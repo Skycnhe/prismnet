@@ -1,4 +1,10 @@
 import { LOG_LEVEL } from '~/constants'
+import {
+  prismMockConfig,
+  prismMockConnections,
+  prismMockProxies,
+  prismMockVersion,
+} from './prismMock'
 
 // Use generic types to avoid strict type checking on mock data
 // This data is only used for screenshots and testing
@@ -835,15 +841,17 @@ export const mockMemory = {
 }
 
 // Composable for accessing mock data
+// PrismNet: the demo uses a Chinese side-router setup (region 竞技 / 哈希 / 轮询
+// groups, TUN mode) so screenshots match the PrismNet overview.
 export function useMockData() {
   return {
-    mockVersion,
-    mockConfig,
-    mockProxies,
-    mockProxyProviders,
+    mockVersion: prismMockVersion,
+    mockConfig: prismMockConfig,
+    mockProxies: prismMockProxies,
+    mockProxyProviders: {} as typeof mockProxyProviders,
     mockRules,
     mockRuleProviders,
-    mockConnections,
+    mockConnections: prismMockConnections as typeof mockConnections,
     mockLogs,
     mockTrafficStats,
     mockMemory,

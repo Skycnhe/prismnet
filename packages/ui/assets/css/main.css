@@ -306,3 +306,48 @@ body {
 .conn-table-container {
   font-variant-numeric: tabular-nums;
 }
+
+/* ============================================================
+   PrismNet glass cards (overview / topology / PrismNet settings)
+   ============================================================ */
+.prism-card {
+  border-radius: 1.1rem;
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 11%, transparent);
+  background: color-mix(in oklab, var(--color-base-200) 64%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+  box-shadow:
+    var(--inner-highlight),
+    0 10px 28px rgb(0 0 0 / 0.22);
+}
+
+.prism-sub {
+  border-radius: 0.9rem;
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 8%, transparent);
+  background: color-mix(in oklab, var(--color-base-100) 58%, transparent);
+}
+
+.prism-muted {
+  color: color-mix(in oklab, var(--color-base-content) 62%, transparent);
+}
+
+.prism-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+}
+
+.prism-num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.prism-lat-good {
+  color: var(--color-success);
+}
+.prism-lat-mid {
+  color: var(--color-warning);
+}
+.prism-lat-bad {
+  color: var(--color-error);
+}

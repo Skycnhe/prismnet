@@ -2,14 +2,17 @@
 import type {MobileNavReselectDetail} from '~/constants';
 import {
   IconChartAreaLine,
+  IconChartBar,
   IconFileStack,
   IconGlobe,
+  IconHierarchy3,
   IconHome,
   IconNetwork,
   IconPlus,
   IconRuler,
   IconServerCog,
   IconSettings,
+  IconSparkles,
   IconX,
 } from '@tabler/icons-vue'
 import {
@@ -36,9 +39,12 @@ const rightPrimaryItems = computed(() => primaryItems.value.slice(2, 4))
 // Secondary items in the FAB popup
 const secondaryItems = computed(() => {
   const items = [
+    { href: '/topology', name: t('prism.topology'), icon: IconHierarchy3 },
+    { href: '/statistics', name: t('prism.statistics'), icon: IconChartBar },
     { href: '/traffic', name: t('dataUsage'), icon: IconChartAreaLine },
     { href: '/logs', name: t('logs'), icon: IconFileStack },
     { href: '/config', name: t('config'), icon: IconSettings },
+    { href: '/prism', name: t('prism.settings'), icon: IconSparkles },
   ]
   // Desktop/server only: keep the Control Center reachable on narrow viewports
   // (e.g. a phone hitting the server-mode dashboard). Hidden in the plain web

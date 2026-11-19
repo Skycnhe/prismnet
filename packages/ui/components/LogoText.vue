@@ -7,22 +7,21 @@ const hasEndpoint = computed(() => !!endpointStore.currentEndpoint)
 
 <template>
   <div
-    class="flex min-w-0 items-center gap-1 text-sm font-bold whitespace-nowrap uppercase sm:text-xl"
+    class="flex min-w-0 items-center gap-1 text-sm font-bold whitespace-nowrap sm:text-xl"
   >
     <NuxtLink
-      class="bg-linear-to-br from-primary to-secondary bg-clip-text text-transparent no-underline"
+      class="bg-linear-to-br from-info via-primary to-warning bg-clip-text tracking-wide text-transparent no-underline"
       :to="hasEndpoint ? '/' : '/setup'"
     >
-      <span>metacube</span>
+      <span>PrismNet</span>
     </NuxtLink>
-    <span class="hidden text-base-content min-[400px]:inline">(</span>
     <a
-      class="hidden text-primary no-underline transition-transform duration-300 ease-in-out hover:scale-125 hover:rotate-90 min-[400px]:inline-block"
-      href="https://github.com/metacubex/metacubexd"
+      class="hidden text-[0.6em] font-normal text-base-content/50 no-underline hover:text-base-content min-[400px]:inline"
+      href="https://github.com/Skycnhe/prismnet"
       target="_blank"
+      title="PrismNet · 基于 metacubexd"
     >
-      xd
+      mihomo
     </a>
-    <span class="hidden text-base-content min-[400px]:inline">)</span>
   </div>
 </template>

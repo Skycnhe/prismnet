@@ -652,5 +652,10 @@
   "visualEditorDiagnostics": "عیب‌یابی پیکربندی",
   "visualEditorManaged": "مدیریت‌شده",
   "quality": "کیفیت",
-  "sortDefault": "پیش‌فرض"
+  "sortDefault": "پیش‌فرض",
+  "prism": {
+    "settings": "PrismNet",
+    "topology": "Topology",
+    "statistics": "Statistics"
+  }
 }

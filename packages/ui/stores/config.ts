@@ -20,9 +20,12 @@ import {
   TAILWINDCSS_SIZE,
 } from '~/constants'
 
+/** PrismNet 默认背景图（随面板发布） */
+export const PRISM_DEFAULT_BACKGROUND = 'prism-bg.webp'
+
 export const useConfigStore = defineStore('config', () => {
   // Theme
-  const curTheme = useLocalStorage<(typeof themes)[number]>('theme', 'sunset')
+  const curTheme = useLocalStorage<(typeof themes)[number]>('theme', 'night')
   const autoSwitchTheme = useLocalStorage('autoSwitchTheme', false)
   const favDayTheme = useLocalStorage<(typeof themes)[number]>(
     'favDayTheme',
@@ -30,7 +33,7 @@ export const useConfigStore = defineStore('config', () => {
   )
   const favNightTheme = useLocalStorage<(typeof themes)[number]>(
     'favNightTheme',
-    'sunset',
+    'night',
   )
 
   // Proxies settings
@@ -239,17 +242,21 @@ export const useConfigStore = defineStore('config', () => {
   // 'url' = remote image URL (e.g. a Bing daily-wallpaper endpoint).
   const backgroundImageType = useLocalStorage<'none' | 'custom' | 'url'>(
     'backgroundImageType',
-    'none',
+    'url',
   )
-  // Remote image URL used when backgroundImageType === 'url'
-  const backgroundImageUrl = useLocalStorage('backgroundImageUrl', '')
+  // Remote image URL used when backgroundImageType === 'url'. PrismNet ships a
+  // default wallpaper (public/prism-bg.webp) for its glass card style.
+  const backgroundImageUrl = useLocalStorage(
+    'backgroundImageUrl',
+    PRISM_DEFAULT_BACKGROUND,
+  )
   // Backdrop blur radius (px) applied over the background image
   const backgroundBlur = useLocalStorage('backgroundBlur', 0)
   // Opacity (%) of the base surface laid over the background image, so cards/text
   // stay legible. 100 = fully opaque (background hidden), 0 = fully transparent.
   const backgroundOverlayOpacity = useLocalStorage(
     'backgroundOverlayOpacity',
-    70,
+    30,
   )
   // Appearance: custom DaisyUI theme color overrides (CSS custom properties).
   const enableCustomThemeColors = useLocalStorage(
@@ -337,15 +344,15 @@ export const useConfigStore = defineStore('config', () => {
     enableTwemoji.value = false
     useMobileBottomNav.value = true
     favDayTheme.value = 'nord'
-    favNightTheme.value = 'sunset'
-    curTheme.value = 'sunset'
+    favNightTheme.value = 'night'
+    curTheme.value = 'night'
     defaultPage.value = 'overview'
     onboardingDismissed.value = false
     enableDataUsageTracking.value = true
-    backgroundImageType.value = 'none'
-    backgroundImageUrl.value = ''
+    backgroundImageType.value = 'url'
+    backgroundImageUrl.value = PRISM_DEFAULT_BACKGROUND
     backgroundBlur.value = 0
-    backgroundOverlayOpacity.value = 70
+    backgroundOverlayOpacity.value = 30
     enableCustomThemeColors.value = false
     customThemeColors.value = {}
     fontFamily.value = ''

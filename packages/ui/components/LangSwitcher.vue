@@ -36,6 +36,7 @@ const { onKeydown } = useMenuKeyboard({
 
 function selectLocale(code: string) {
   setLocale(code as 'en' | 'zh' | 'ru')
+  rememberPrismLocale(code)
   isOpen.value = false
 }
 

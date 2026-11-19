@@ -652,5 +652,10 @@
   "visualEditorDiagnostics": "設定の診断",
   "visualEditorManaged": "管理対象",
   "quality": "品質",
-  "sortDefault": "デフォルト"
+  "sortDefault": "デフォルト",
+  "prism": {
+    "settings": "PrismNet",
+    "topology": "Topology",
+    "statistics": "Statistics"
+  }
 }

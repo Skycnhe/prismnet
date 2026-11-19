@@ -4,11 +4,13 @@ import { autoUpdate, flip, offset, shift, useFloating } from '@floating-ui/vue'
 import {
   IconBolt,
   IconChartAreaLine,
+  IconChartBar,
   IconChevronsLeft,
   IconChevronsRight,
   IconFileCode,
   IconFileStack,
   IconGlobe,
+  IconHierarchy3,
   IconHome,
   IconMenu2,
   IconNetwork,
@@ -18,6 +20,7 @@ import {
   IconRuler,
   IconServerCog,
   IconSettings,
+  IconSparkles,
 } from '@tabler/icons-vue'
 import { toast } from 'vue-sonner'
 import { useMenuKeyboard } from '~/composables/useMenuKeyboard'
@@ -39,9 +42,12 @@ const navItems = computed(() => {
     { href: '/proxies', name: t('proxies'), icon: IconGlobe },
     { href: '/rules', name: t('rules'), icon: IconRuler },
     { href: '/connections', name: t('connections'), icon: IconNetwork },
+    { href: '/topology', name: t('prism.topology'), icon: IconHierarchy3 },
+    { href: '/statistics', name: t('prism.statistics'), icon: IconChartBar },
     { href: '/traffic', name: t('dataUsage'), icon: IconChartAreaLine },
     { href: '/logs', name: t('logs'), icon: IconFileStack },
     { href: '/config', name: t('config'), icon: IconSettings },
+    { href: '/prism', name: t('prism.settings'), icon: IconSparkles },
   ]
   if (hasFeature('profiles')) {
     items.push({ href: '/profiles', name: t('profiles'), icon: IconFileCode })

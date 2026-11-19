@@ -78,10 +78,10 @@ export default defineNuxtConfig({
     // Top-level in @vite-pwa/nuxt v2 (removed from the generateSW options type).
     maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
     manifest: {
-      name: 'MetaCubeXD',
-      short_name: 'MetaCubeXD',
-      description: 'Mihomo Dashboard, The Official One, XD',
-      theme_color: '#000000',
+      name: 'PrismNet',
+      short_name: 'PrismNet',
+      description: 'PrismNet — mihomo 一体化面板（基于 metacubexd）',
+      theme_color: '#0f172a',
       icons: [
         { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
         { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
@@ -97,7 +97,7 @@ export default defineNuxtConfig({
       // Precache the built app shell only (relative paths keep subdirectory
       // deployments working). Backend API responses are dynamic and
       // cross-origin, so they are intentionally left uncached.
-      globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+      globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,webp}'],
       // Keep these out of the precache:
       // - config.js: deploy-time backend URL, editable after build — precaching
       //   would pin a stale address. Always fetch it fresh.
@@ -132,22 +132,20 @@ export default defineNuxtConfig({
   // i18n configuration
   i18n: {
     locales: [
-      { code: 'en', name: 'English', file: 'en.json' },
       { code: 'zh', name: '简体中文', file: 'zh.json' },
+      { code: 'en', name: 'English', file: 'en.json' },
       { code: 'ru', name: 'Русский', file: 'ru.json' },
       { code: 'ja', name: '日本語', file: 'ja.json' },
       { code: 'ko', name: '한국어', file: 'ko.json' },
       { code: 'fr', name: 'Français', file: 'fr.json' },
       { code: 'fa', name: 'فارسی', file: 'fa.json' },
     ],
-    defaultLocale: 'en',
+    defaultLocale: 'zh',
     langDir: 'locales',
     strategy: 'no_prefix',
-    detectBrowserLanguage: {
-      useCookie: true,
-      cookieKey: 'metacubexd_lang',
-      fallbackLocale: 'en',
-    },
+    // PrismNet: Chinese by default regardless of the browser language; a
+    // language picked in the switcher is remembered (plugins/prism-locale).
+    detectBrowserLanguage: false,
   },
 
   // Fonts configuration - using Ubuntu font
@@ -195,8 +193,8 @@ export default defineNuxtConfig({
       charset: 'utf-8',
       viewport:
         'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover',
-      title: 'MetaCubeXD',
-      meta: [{ name: 'theme-color', content: '#000000' }],
+      title: 'PrismNet',
+      meta: [{ name: 'theme-color', content: '#0f172a' }],
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: 'favicon.svg' },
         // iOS fills any transparent pixels of an apple-touch-icon with black,

@@ -596,5 +596,10 @@
   "visualEditorDiagnostics": "Диагностика конфигурации",
   "visualEditorManaged": "Управляемый",
   "quality": "Качество",
-  "sortDefault": "По умолчанию"
+  "sortDefault": "По умолчанию",
+  "prism": {
+    "settings": "PrismNet",
+    "topology": "Topology",
+    "statistics": "Statistics"
+  }
 }
